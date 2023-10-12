@@ -58,7 +58,7 @@ helix_state = np.array([[np.cos(i*np.pi/3),np.sin(i*np.pi/3),0] for i in range(n
 groundstate=helix_state
 dispersion, eigenvects, groundstate = compute_lswt(H_single, H_math, coupling_constants, coupling_constants_n, k_vect, num_spins, num_neighbors, M_num, M, groundstate=groundstate)
 
-# print dnergy of ground state, show ground state, and plot dispersion
+# print energy of ground state, show ground state, and plot dispersion
 print(H_num(*coupling_constants_n, *groundstate.flatten()))
 plot_state(groundstate, elev=90)
 fig, ax = plt.subplots(1, figsize=(4,3))
@@ -126,3 +126,5 @@ for ii, mode in enumerate(kfreqs):
         ax3[1].plot(hzs, np.imag(mode), 'o', ms=0.5)
 ax3[0].set(ylim=(0,None))
 ax3[1].set(ylim=(0,None))
+fig3.tight_layout()
+# %%
