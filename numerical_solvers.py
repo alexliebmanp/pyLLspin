@@ -4,8 +4,8 @@ this file contains functions for numerically calculating disperion relations, bo
 import numpy as np
 import sympy as sp
 import scipy.linalg as lin
-from pyLLspin.groundstates import *
-from pyLLspin.analytical_solvers import *
+from groundstates import *
+from analytical_solvers import *
 
 def compute_lswt(H_single, H_sum, coupling_constants,  coupling_constants_n, k_vect, num_spins, num_neighbors, M_num=None, M=None, groundstate=None, method='Minimize', x0=None, extra_args=['Method -> {"SimulatedAnnealing"}']):
     '''

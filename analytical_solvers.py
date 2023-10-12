@@ -7,7 +7,7 @@ dM/dt = M x Beff
 import numpy as np
 import sympy as sp
 sp.init_printing()
-from pyLLspin.helper import *
+from helper import *
 
 def get_analytical_ll_matrix_transv(H_single, num_spins, num_neighbors):
     '''

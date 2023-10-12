@@ -8,8 +8,8 @@ import scipy.optimize as opt
 from wolframclient.evaluation import WolframLanguageSession
 from wolframclient.language import wl
 from wolframclient.language import wlexpr
-from pyLLspin.mathematica_interface import *
-from pyLLspin.helper import *
+from mathematica_interface import *
+from helper import *
 
 def find_ground_state_mathematica(H_sum, coupling_constants, coupling_constants_n, num_spins, num_neighbors, method='Minimize', x0=None, extra_args=['Method -> {"SimulatedAnnealing"}']):
     '''
