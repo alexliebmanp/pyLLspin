@@ -28,7 +28,7 @@ H_num = get_numerical_H(H_sum, coupling_constants, num_spins, num_neighbors)
 H_math = get_mathematica_H(H_sum, num_spins, num_neighbors)
 ```
 
-Print our the Hamiltonian to ensure that it looks as intended:
+Print out the Hamiltonian to ensure that it looks as intended:
 
 ![Alt text](image-2.png)
 
@@ -52,7 +52,7 @@ coupling_constants = [J1, J2, K, hx, hy, hz, a]
 coupling_constants_n = [J1_n, J2_n, K_n, hx_n, hy_n, hz_n, a_n]
 ```
 
-And then we can use ```compute_lswt```, which is a macro function that uses ```get_disperion``` under the hood, to obtain the disperion relation for a variety of wavevectors in ```k_vect```. Note that here we know that the ground state is a helix and so we put this in by hand, but in general one would need to compute the ground state.
+And then we can use ```compute_lswt```, which is a macro function that uses ```get_dispersion``` under the hood, to obtain the dispersion relation for a variety of wavevectors in ```k_vect```. Note that here we know that the ground state is a helix and so we put this in by hand, but in general one would need to compute the ground state.
 
 ```
 #############################
@@ -76,12 +76,12 @@ for i in range(len(dispersion)):
 plt.show()
 ```
 
-This yields the following output:
+This yields the following output showing the disperion relation as well as a visualization of the ground state using ```plot_state```:
 
 ![Alt text](image.png)
 ![Alt text](image-1.png)
 
-Subsequent code then uses the ```find_ground_state``` function to evaluate the ground state for a range of different values of $h_z$, the out-of-plane field. As a check, we plot out the energy, $M_z$, and birefringence of the states as a function of field. We are enouraged that the calculation worked by the smoothness of the energy.
+Subsequent code then uses the ```find_ground_state``` function to evaluate the ground state for a range of different values of $h_z$, the out-of-plane field.
 
 ```
 # compute ground state as a function of field:
@@ -96,6 +96,11 @@ for ii in tqdm(range(1,len(hzs))):
     groundstate = find_ground_state_python(H_num, coupling_constants, coupling_constants_trial, num_spins, num_neighbors, x0=groundstate_old)
     groundstates.append(groundstate)
     groundstate_old = groundstate
+```
+
+As a check, we plot out the energy, $M_z$, and birefringence of the states as a function of field. We are enouraged that the calculation worked by the smoothness of the energy.
+
+```
 magx = np.array([np.sum(groundstates[i], axis=0)[0] for i in range(len(groundstates))])
 magy = np.array([np.sum(groundstates[i], axis=0)[1] for i in range(len(groundstates))])
 magz = np.array([np.sum(groundstates[i], axis=0)[2] for i in range(len(groundstates))])
