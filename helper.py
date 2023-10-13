@@ -103,3 +103,28 @@ def simultaneous_subs(expr, substitutions):
     # Replace the temporary symbols back to their original variables
     return expr.subs(temp_subs).subs(final_subs)
 
+def angles_to_spin_state(angles):
+    '''
+    takes state in form [theta1,...,thetan,phi1,...,phin] and puts it into form [[S1x,S1y,S1z],...,[Snx,Sny,Snz]].
+    '''
+
+    num_spins = int(len(angles)/2)
+    thetas = angles[:num_spins]
+    phis = angles[num_spins:]
+    return np.array([[np.sin(thetas[i])*np.cos(phis[i]), np.sin(thetas[i])*np.sin(phis[i]), np.cos(thetas[i])] for i in range(num_spins)])
+
+def spin_state_to_angles(state):
+    '''
+    takes state in form [[S1x,S1y,S1z],...,[Snx,Sny,Snz]] and puts it into angle form [theta1,...,thetan,phi1,...,phin]
+    '''
+
+    thetas = []
+    phis = []
+    for s in state:
+        s_norm = s/np.sqrt(np.sum([s[i]**2 for i in range(3)])) # normalize state just in case
+        sx = s_norm[0]
+        sy = s_norm[1]
+        sz = s_norm[2]
+        thetas.append(np.arctan2(np.sqrt(sx**2 + sy**2),sz))
+        phis.append(np.arctan2(sy,sx))
+    return redefine_angles(thetas+phis)
