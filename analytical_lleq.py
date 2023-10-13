@@ -22,6 +22,7 @@ def get_analytical_ll_matrix_transv(H_single, num_spins, num_neighbors):
 
     return:
         - M:    analytical expression for M such that M*m = omega*m
+        - transf:   analytical transformation from local coordinates to xyz
     '''
 
     # compute effective field in LLG formalism as derivative of H with respect to S in cartesian coordinates
@@ -54,7 +55,6 @@ def get_analytical_ll_matrix_transv(H_single, num_spins, num_neighbors):
     Rot_n = sp.rot_axis2(theta_n)*sp.rot_axis3(phi_n)
     ll_rot = (-(S(n)).cross(simultaneous_subs(Rot_n*B_eff,subs_list_rot)))
     
-
     # replace S with (dSx, dSy, 1) where dSx and dSy are small fluctuating component transverse to z (in rotated frame)
     subs_listx = [(Sx(n+i), dSx(n+i)) for i in range(-num_neighbors, num_neighbors+1)]
     subs_listy = [(Sy(n+i), dSy(n+i)) for i in range(-num_neighbors, num_neighbors+1)]
@@ -88,9 +88,14 @@ def get_analytical_ll_matrix_transv(H_single, num_spins, num_neighbors):
         for ii, element in enumerate(ll_lin_ansatz):
             if ii%3!=2:
                 ll_lin_vect.append(element.subs(subs_list2).subs(subs_list3))
+    transf = sp.Matrix(np.zeros((3*num_spins, 3*num_spins)))
+    for j in range(num_spins):
+        subs_list4 = [(Sx0(n), Sx0(sp.Mod(j, num_spins))), (Sy0(n), Sy0(sp.Mod(j, num_spins))), (Sz0(n), Sz0(sp.Mod(j, num_spins)))]
+        transf[3*j:3*(j+1),3*j:3*(j+1)] = Rot_inv_n.subs(subs_list4)
     ll_lin_vect = sp.Matrix(ll_lin_vect)
     M = generate_matrix(u_vect, ll_lin_vect)
-    return M
+
+    return M, transf
 
 def get_analytical_ll_matrix(H_single, num_spins, num_neighbors):
     '''
@@ -156,6 +161,7 @@ def get_analytical_ll_matrix(H_single, num_spins, num_neighbors):
     M = generate_matrix(u_vect, ll_lin_vect)
 
     return M
+
 def generate_matrix(a, b):
     '''
     finds matrix M in equation b = Ma given a and b using sympy.
