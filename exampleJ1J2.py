@@ -5,6 +5,7 @@ This file shows an example calculation of dispersion and field dependence of
 import numpy as np
 import matplotlib.pyplot as plt
 from analytical_lleq import *
+from dispersion import *
 from numerical import *
 from groundstates import *
 from visualize import *
