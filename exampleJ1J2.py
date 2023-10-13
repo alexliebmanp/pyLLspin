@@ -29,7 +29,7 @@ H_single = -2*J1*S(n).dot(S(n+1) + S(n-1)) + -2*J2*S(n).dot(S(n+2) + S(n-2)) - 2
 H_sum = -2*J1*S(n).dot(S(n+1)) + -2*J2*S(n).dot(S(n+2)) - 2*S(n).dot(h) + K*Sz(n)**2
 
 # obtain analytical and numerical expressions for the LL matrix
-M = get_analytical_ll_matrix_transv(H_single, num_spins, num_neighbors)
+M, transf = get_analytical_ll_matrix_transv(H_single, num_spins, num_neighbors)
 M_num = get_numerical_ll_matrix(M, coupling_constants, num_spins)
 H_num = get_numerical_H(H_sum, coupling_constants, num_spins, num_neighbors)
 H_math = get_mathematica_H(H_sum, num_spins, num_neighbors)
