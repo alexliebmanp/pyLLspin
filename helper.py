@@ -115,7 +115,7 @@ def angles_to_spin_state(angles):
 
 def spin_state_to_angles(state):
     '''
-    takes state in form [[S1x,S1y,S1z],...,[Snx,Sny,Snz]] and puts it into angle form [theta1,...,thetan,phi1,...,phin]
+    takes state in form [[S1x,S1y,S1z],...,[Snx,Sny,Snz]] and puts it into angle form [theta1,...,thetan,phi1,...,phin] where thetas are the azimuthal angle. phi is the polar angle.
     '''
 
     thetas = []
