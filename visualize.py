@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import colorcet as cc
 import mpl_toolkits.mplot3d.art3d as art3d
 from matplotlib.patches import Circle
-from helper import *
+from pyLLspin.helper import *
 
 def get_mode(mode, k_num, time, k_vect, energies, eigenvectors):
     '''

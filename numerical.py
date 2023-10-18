@@ -4,8 +4,8 @@ this file contains functions for numerically calculating disperion relations and
 import numpy as np
 import sympy as sp
 import scipy.linalg as lin
-from groundstates import *
-from analytical_lleq import *
+from pyLLspin.groundstates import *
+from pyLLspin.analytical_lleq import *
 
 def get_numerical_ll_matrix(M, coupling_constants, num_spins):
     '''

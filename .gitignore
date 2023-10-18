@@ -5,3 +5,10 @@ __pycache__/mathematica_interface.cpython-311.pyc
 __pycache__/numerical_solvers.cpython-311.pyc
 __pycache__/observables.cpython-311.pyc
 __pycache__/visualize.cpython-311.pyc
+__pycache__/__init__.cpython-311.pyc
+.gitignore
+__pycache__/analytical_lleq.cpython-311.pyc
+.gitignore
+__pycache__/numerical.cpython-311.pyc
+.gitignore
+__pycache__/dispersion.cpython-311.pyc
