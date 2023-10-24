@@ -162,6 +162,39 @@ def get_analytical_ll_matrix(H_single, num_spins, num_neighbors):
 
     return M
 
+def get_analytical_driving_term(H_single, num_spins, num_neighbors):
+    '''
+    Obtain analytical form of driving term in LLG equation, for use in generating driving terms for LLG simulations.
+
+    args: 
+        - H_single: single spin energy
+        - num_spins:    number of spins in chain
+    returns:
+
+    '''
+
+    # compute effective field in LLG formalism as derivative of H with respect to S
+    B_effx = sp.diff(H_single, Sx(n))
+    B_effy = sp.diff(H_single, Sy(n))
+    B_effz = sp.diff(H_single, Sz(n))
+    B_eff = sp.Matrix([B_effx, B_effy, B_effz])
+
+    # from effective field, compute the right hand side of LLG equation of motion
+    llg = -gamma*S(n).cross(B_eff) - alpha*S(n).cross(S(n).cross(B_eff))
+
+    # compute the n spin right hand side
+    u_vect = sp.Matrix([element for sublist in [[ux(i), uy(i), uz(i)] for i in range(num_spins)] for element in sublist])
+    llg_vect = []
+    for j in range(num_spins):
+        subs_listx = [(Sx(n+i), Sx(sp.Mod(j+i, num_spins))) for i in range(-num_neighbors, num_neighbors+1)]
+        subs_listy = [(Sy(n+i), Sy(sp.Mod(j+i, num_spins))) for i in range(-num_neighbors, num_neighbors+1)]
+        subs_listz = [(Sz(n+i), Sz(sp.Mod(j+i, num_spins))) for i in range(-num_neighbors, num_neighbors+1)]
+        subs_list = subs_listx+subs_listy+subs_listz
+        for element in llg:
+            llg_vect.append(element.subs(subs_list))
+    llg_driving_term = sp.Matrix(llg_vect)
+    return llg_driving_term
+
 def generate_matrix(a, b):
     '''
     finds matrix M in equation b = Ma given a and b using sympy.

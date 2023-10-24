@@ -11,6 +11,7 @@ from wolframclient.language import wlexpr
 from pyLLspin.mathematica_interface import *
 from pyLLspin.helper import *
 from pyLLspin.numerical import *
+from pyLLspin.diff_eq_solver import *
 
 def find_ground_state_mathematica(H_sum, coupling_constants, coupling_constants_n, num_spins, num_neighbors, method='Minimize', x0=None, extra_args=['Method -> {"SimulatedAnnealing"}']):
     '''
@@ -129,3 +130,50 @@ def find_ground_state_python(H_num, coupling_constants, coupling_constants_n, nu
     groundstate = angles_to_spin_state(angles)
 
     return groundstate
+
+def find_ground_state_llg(driving_term_num, coupling_constants_n, x0, gamma, alpha, dt=0.1, Ns=10000):
+    '''
+    wrapper function for just finding the ground state via run_llg_simulation.
+
+    args:
+        - driving_term_num: function which evaluates RHS of LLG equation with inputs f(*coupling_constants_n, *state, alpha, gamma)
+        - coupling_constants_n: numerical coupling constants of free energy
+        - x0:  initial state in form [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
+        - gamma:   gyromagnetic ratio
+        - alpha:   phenomenological damping
+        - dt:      simulation time step
+        - Ns       number of time steps
+
+    returns:
+        - final_state: final state in simulation of form [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
+    '''
+    times, states = run_llg_sim(driving_term_num, coupling_constants_n, x0, gamma, alpha, dt, Ns)
+    final_state = states[-1]
+    return final_state
+
+def run_llg_sim(driving_term_num, coupling_constants_n, x0, gamma, alpha, dt=0.1, Ns=10000):
+    '''
+    function of running an LLG simulation using numerical driving term function, ie numerically solve
+
+    dM/dt = -gamma*M\crossB_eff - alpha*M\cross(M\crossB_eff)
+
+    args:
+        - driving_term_num: function which evaluates RHS of LLG equation with inputs f(*coupling_constants_n, *state, alpha, gamma)
+        - coupling_constants_n: numerical coupling constants of free energy
+        - x0:  initial state in form [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
+        - gamma:   gyromagnetic ratio
+        - alpha:   phenomenological damping
+        - dt:      simulation time step
+        - Ns       number of time steps
+
+    returns:
+        - times: simulation time vector
+        - states:   (Ns, nspins, 3) array representing state at each time step.
+    '''
+    nspins = len(x0)
+    x0_flat = x0.flatten()
+    G = lambda t, state: driving_term_num(*coupling_constants_n, *state, gamma, alpha)
+    times, states_flat = rkode(G, 0, x0_flat, dt, Ns)
+    states = np.reshape(states_flat, (Ns, nspins, 3))
+    final_state = np.reshape(states_flat[-1], (nspins, 3))
+    return times, states

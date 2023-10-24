@@ -74,3 +74,23 @@ def get_mathematica_H(H_sum, num_spins, num_neighbors):
         H_mathematica = str(H_angles).replace('**','^').replace('[','').replace(']','').replace('sin', 'Sin').replace('cos','Cos').replace('(','[').replace(')',']')
 
     return H_mathematica
+
+def get_numerical_driving_term(driving_term, coupling_constants, num_spins):
+    '''
+    compute a numerical function for LLG driving term given symbolic driving term.
+
+    args:
+        - driving_term:    analytical expression for right hand side of LLG equation
+        - coupling_constants:   list of symbolic coupling constants
+        - num_spins:    number of spins in system.
+    
+    returns:
+        - driving_term_num:  numerical function driving_term_num with arguments (*coupling_constants, *state, alpha, gamma)
+    '''
+    state_vars = []
+    for i in range(num_spins):
+        state_vars.append(Sx(i))
+        state_vars.append(Sy(i))
+        state_vars.append(Sz(i))
+    driving_term_num = sp.lambdify(coupling_constants+state_vars+[alpha, gamma], driving_term, 'numpy')
+    return driving_term_num
