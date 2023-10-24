@@ -11,7 +11,7 @@ import sympy as sp
 ##############################################
 
 # constants
-N, hbar, t, p, k, omega, lattice_const = sp.symbols('N, hbar, t, p, k, omega, a_0')
+N, hbar, t, p, k, omega, lattice_const, alpha, gamma = sp.symbols('N, hbar, t, p, k, omega, a_0, alpha, gamma')
 n = sp.symbols('n', cls=sp.Idx)
 
 # indexed variable generators

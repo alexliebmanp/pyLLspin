@@ -8,9 +8,10 @@ import scipy.optimize as opt
 from wolframclient.evaluation import WolframLanguageSession
 from wolframclient.language import wl
 from wolframclient.language import wlexpr
-from mathematica_interface import *
-from helper import *
-from numerical import *
+from pyLLspin.mathematica_interface import *
+from pyLLspin.helper import *
+from pyLLspin.numerical import *
+from pyLLspin.diff_eq_solver import *
 
 def find_ground_state_mathematica(H_sum, coupling_constants, coupling_constants_n, num_spins, num_neighbors, method='Minimize', x0=None, extra_args=['Method -> {"SimulatedAnnealing"}']):
     '''
@@ -130,39 +131,49 @@ def find_ground_state_python(H_num, coupling_constants, coupling_constants_n, nu
 
     return groundstate
 
-def AFMfind_ground_state_python(H_num, coupling_constants, coupling_constants_n, num_spins, num_neighbors, x0=None, method=None):
+def find_ground_state_llg(driving_term_num, coupling_constants_n, x0, gamma, alpha, dt=0.1, Ns=10000):
     '''
-    Given a spin chain Hamiltonian in the form H = sum(H_sum) where the sum is on spins, and a list of coupling contants and their values, and the number of spins, computes the ground state spin configuration. Periodic boundary conditions are applied at the boundaries of spin chain.
+    wrapper function for just finding the ground state via run_llg_simulation.
 
     args:
-        - H_num:    python function to minimize, representing Hamiltonian. Its arguments are of the form (*coupling_constants, Sx1, Sy1, Sz1, ...., Sxn, Syn, Szn).
-        - coupling_constants:   list of symbolic coupling constants - included for now just for consistency with Mathematica function
-        - coupling_constants_n: list of associated values
-        - num_spins:    number of spins in the system
-        - num_neighbors:    number of nearest neighbor interactions in the Hamiltonian
-        - x0:       initial state for each spin in form [[Sx1, Sy1, Sz1],...,[Sxn, Syn,Szn]], gets converted to [theta1,...,thetan,phi1,...,phin]
-        - method:   method to use with opt.minimize
+        - driving_term_num: function which evaluates RHS of LLG equation with inputs f(*coupling_constants_n, *state, alpha, gamma)
+        - coupling_constants_n: numerical coupling constants of free energy
+        - x0:  initial state in form [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
+        - gamma:   gyromagnetic ratio
+        - alpha:   phenomenological damping
+        - dt:      simulation time step
+        - Ns       number of time steps
 
     returns:
-        - groundstate:     minimum energy state in form [[Sx1, Sy1, Sz1],...,[Sxn, Syn,Szn]]
+        - final_state: final state in simulation of form [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
     '''
-    
-    # setup initial state
-    if x0 is None:
-        x0 = np.array([0 for i in range(2*num_spins)])
-    else:
-        x0 = spin_state_to_angles(x0)
+    times, states = run_llg_sim(driving_term_num, coupling_constants_n, x0, gamma, alpha, dt, Ns)
+    final_state = states[-1]
+    return final_state
 
-    # get numerical Hamiltonian as function of angles
-    H_angles = lambda angles: H_num(*coupling_constants_n, *angles_to_spin_state(angles).flatten())
-    #print(H_angles(x0))
+def run_llg_sim(driving_term_num, coupling_constants_n, x0, gamma, alpha, dt=0.1, Ns=10000):
+    '''
+    function of running an LLG simulation using numerical driving term function, ie numerically solve
 
-    # minimize H_angles
-    res = opt.minimize(H_angles, x0, method=method)
+    dM/dt = -gamma*M\crossB_eff - alpha*M\cross(M\crossB_eff)
 
-    angles = [i for i in res.x]
-    angles = normal_rotate_state(angles)
-    angles = redefine_angles(angles)
-    groundstate = angles_to_spin_state(angles)
+    args:
+        - driving_term_num: function which evaluates RHS of LLG equation with inputs f(*coupling_constants_n, *state, alpha, gamma)
+        - coupling_constants_n: numerical coupling constants of free energy
+        - x0:  initial state in form [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
+        - gamma:   gyromagnetic ratio
+        - alpha:   phenomenological damping
+        - dt:      simulation time step
+        - Ns       number of time steps
 
-    return groundstate
+    returns:
+        - times: simulation time vector
+        - states:   (Ns, nspins, 3) array representing state at each time step.
+    '''
+    nspins = len(x0)
+    x0_flat = x0.flatten()
+    G = lambda t, state: driving_term_num(*coupling_constants_n, *state, gamma, alpha)
+    times, states_flat = rkode(G, 0, x0_flat, dt, Ns)
+    states = np.reshape(states_flat, (Ns, nspins, 3))
+    final_state = np.reshape(states_flat[-1], (nspins, 3))
+    return times, states
