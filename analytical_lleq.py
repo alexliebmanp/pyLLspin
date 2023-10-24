@@ -192,7 +192,7 @@ def get_analytical_driving_term(H_single, num_spins, num_neighbors):
         subs_list = subs_listx+subs_listy+subs_listz
         for element in llg:
             llg_vect.append(element.subs(subs_list))
-    llg_driving_term = sp.Matrix(llg_vect)
+    llg_driving_term = sp.Array(llg_vect)
     return llg_driving_term
 
 def generate_matrix(a, b):
