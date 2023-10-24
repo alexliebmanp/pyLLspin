@@ -12,3 +12,13 @@ __pycache__/analytical_lleq.cpython-311.pyc
 __pycache__/numerical.cpython-311.pyc
 .gitignore
 __pycache__/dispersion.cpython-311.pyc
+.ipynb_checkpoints/exampleAFM-checkpoint.py
+.ipynb_checkpoints/exampleJ1J2-checkpoint.py
+__pycache__/analytical_lleq.cpython-38.pyc
+__pycache__/dispersion.cpython-38.pyc
+__pycache__/groundstates.cpython-38.pyc
+__pycache__/helper.cpython-38.pyc
+__pycache__/mathematica_interface.cpython-38.pyc
+__pycache__/numerical.cpython-38.pyc
+__pycache__/observables.cpython-38.pyc
+__pycache__/visualize.cpython-38.pyc
