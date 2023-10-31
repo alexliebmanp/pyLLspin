@@ -185,18 +185,12 @@ def get_analytical_driving_term(H_single, num_spins, num_neighbors):
     # compute the n spin right hand side
     llg_vect = []
     for j in range(num_spins):
-        neighbors = []
         subs_list = []
-        for i in range(-num_neighbors, num_neighbors+1): # algorithm to ensure no double counting of interactions
+        for i in range(-num_neighbors, num_neighbors+1):
             neighbor  = sp.Mod(j+i, num_spins)
-            if neighbor not in neighbors:
-                subs_list = subs_list + [(Sx(n+i), Sx(neighbor)), (Sy(n+i), Sy(neighbor)), (Sz(n+i), Sz(neighbor))]
-                neighbors.append(neighbor)
-        subs_list2 = []
-        for i in range(-num_neighbors, num_neighbors+1): # after all other substitutions, take remaining terms to 0
-            subs_list2 = subs_list2 + [(Sx(n+i), 0), (Sy(n+i), 0), (Sz(n+i), 0)]
+            subs_list = subs_list + [(Sx(n+i), Sx(neighbor)), (Sy(n+i), Sy(neighbor)), (Sz(n+i), Sz(neighbor))]
         for element in llg:
-            subbed_elem = element.subs(subs_list).subs(subs_list2)
+            subbed_elem = element.subs(subs_list)
             llg_vect.append(subbed_elem)
     llg_driving_term = sp.Array(llg_vect)
     return llg_driving_term
