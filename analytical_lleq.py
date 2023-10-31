@@ -180,18 +180,24 @@ def get_analytical_driving_term(H_single, num_spins, num_neighbors):
     B_eff = sp.Matrix([B_effx, B_effy, B_effz])
 
     # from effective field, compute the right hand side of LLG equation of motion
-    llg = -gamma*S(n).cross(B_eff) - alpha*S(n).cross(S(n).cross(B_eff))
+    llg = -S(n).cross(B_eff) - alpha*S(n).cross(S(n).cross(B_eff))
 
     # compute the n spin right hand side
-    u_vect = sp.Matrix([element for sublist in [[ux(i), uy(i), uz(i)] for i in range(num_spins)] for element in sublist])
     llg_vect = []
     for j in range(num_spins):
-        subs_listx = [(Sx(n+i), Sx(sp.Mod(j+i, num_spins))) for i in range(-num_neighbors, num_neighbors+1)]
-        subs_listy = [(Sy(n+i), Sy(sp.Mod(j+i, num_spins))) for i in range(-num_neighbors, num_neighbors+1)]
-        subs_listz = [(Sz(n+i), Sz(sp.Mod(j+i, num_spins))) for i in range(-num_neighbors, num_neighbors+1)]
-        subs_list = subs_listx+subs_listy+subs_listz
+        neighbors = []
+        subs_list = []
+        for i in range(-num_neighbors, num_neighbors+1): # algorithm to ensure no double counting of interactions
+            neighbor  = sp.Mod(j+i, num_spins)
+            if neighbor not in neighbors:
+                subs_list = subs_list + [(Sx(n+i), Sx(neighbor)), (Sy(n+i), Sy(neighbor)), (Sz(n+i), Sz(neighbor))]
+                neighbors.append(neighbor)
+        subs_list2 = []
+        for i in range(-num_neighbors, num_neighbors+1): # after all other substitutions, take remaining terms to 0
+            subs_list2 = subs_list2 + [(Sx(n+i), 0), (Sy(n+i), 0), (Sz(n+i), 0)]
         for element in llg:
-            llg_vect.append(element.subs(subs_list))
+            subbed_elem = element.subs(subs_list).subs(subs_list2)
+            llg_vect.append(subbed_elem)
     llg_driving_term = sp.Array(llg_vect)
     return llg_driving_term
 

@@ -39,14 +39,20 @@ def get_numerical_H(H_sum, coupling_constants, num_spins, num_neighbors):
     # obtain numerican Hamiltonian functions (for both use in numpy and mathematica)
     H_tot = 0
     for j in range(num_spins):
-        subs_listx = [(Sx(n+i), Sx(sp.Mod(j+i, num_spins))) for i in range(-num_neighbors, num_neighbors+1)]
-        subs_listy = [(Sy(n+i), Sy(sp.Mod(j+i, num_spins))) for i in range(-num_neighbors, num_neighbors+1)]
-        subs_listz = [(Sz(n+i), Sz(sp.Mod(j+i, num_spins))) for i in range(-num_neighbors, num_neighbors+1)]
+        subs_listx = [(Sx(n+i), Sx(j+i)) for i in range(0, num_neighbors+1)]
+        subs_listy = [(Sy(n+i), Sy(j+i)) for i in range(0, num_neighbors+1)]
+        subs_listz = [(Sz(n+i), Sz(j+i)) for i in range(0, num_neighbors+1)]
         subs_list = subs_listx+subs_listy+subs_listz
         for element in sp.expand(H_sum).args:
             H_tot = H_tot + element.subs(subs_list)
-    subs_list6 = [(Sx(i), Ss(3*i)) for i in range(num_spins)]+[(Sy(i), Ss(3*i+1)) for i in range(num_spins)]+[(Sz(i), Ss(3*i+2)) for i in range(num_spins)]
-    H_tot = H_tot.subs(subs_list6)
+    # kill all terms with spins greater than num_spins to not over count
+    subs_listx2 = [(Sx(num_spins+i), 0) for i in range(0, num_neighbors+1)]
+    subs_listy2 = [(Sy(num_spins+i), 0) for i in range(0, num_neighbors+1)]
+    subs_listz2 = [(Sz(num_spins+i), 0) for i in range(0, num_neighbors+1)]
+    subs_list2 = subs_listx2+subs_listy2+subs_listz2
+    H_tot = H_tot.subs(subs_list2)
+    subs_list3 = [(Sx(i), Ss(3*i)) for i in range(num_spins)]+[(Sy(i), Ss(3*i+1)) for i in range(num_spins)]+[(Sz(i), Ss(3*i+2)) for i in range(num_spins)]
+    H_tot = H_tot.subs(subs_list3)
     func_input = tuple(coupling_constants+[Ss(i) for i in range(num_spins*3)])
     H_python = sp.lambdify(func_input, H_tot, 'numpy')
 
@@ -85,12 +91,12 @@ def get_numerical_driving_term(driving_term, coupling_constants, num_spins):
         - num_spins:    number of spins in system.
     
     returns:
-        - driving_term_num:  numerical function driving_term_num with arguments (*coupling_constants, *state, alpha, gamma)
+        - driving_term_num:  numerical function driving_term_num with arguments (*coupling_constants, *state, alpha), alpha being the damping constant
     '''
     state_vars = []
     for i in range(num_spins):
         state_vars.append(Sx(i))
         state_vars.append(Sy(i))
         state_vars.append(Sz(i))
-    driving_term_num = sp.lambdify(coupling_constants+state_vars+[alpha, gamma], driving_term, 'numpy')
+    driving_term_num = sp.lambdify(coupling_constants+state_vars+[alpha], driving_term, 'numpy')
     return driving_term_num

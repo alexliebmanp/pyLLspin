@@ -131,7 +131,7 @@ def find_ground_state_python(H_num, coupling_constants, coupling_constants_n, nu
 
     return groundstate
 
-def find_ground_state_llg(driving_term_num, coupling_constants_n, x0, gamma, alpha, dt=0.1, Ns=10000):
+def find_ground_state_llg(driving_term_num, coupling_constants_n, x0, alpha, dt=0.1, Ns=10000):
     '''
     wrapper function for just finding the ground state via run_llg_simulation.
 
@@ -147,11 +147,11 @@ def find_ground_state_llg(driving_term_num, coupling_constants_n, x0, gamma, alp
     returns:
         - final_state: final state in simulation of form [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
     '''
-    times, states = run_llg_sim(driving_term_num, coupling_constants_n, x0, gamma, alpha, dt, Ns)
+    times, states = run_llg_sim(driving_term_num, coupling_constants_n, x0, alpha, dt, Ns)
     final_state = states[-1]
     return final_state
 
-def run_llg_sim(driving_term_num, coupling_constants_n, x0, gamma, alpha, dt=0.1, Ns=10000):
+def run_llg_sim(driving_term_num, coupling_constants_n, x0, alpha, dt=0.1, Ns=10000):
     '''
     function of running an LLG simulation using numerical driving term function, ie numerically solve
 
@@ -172,7 +172,7 @@ def run_llg_sim(driving_term_num, coupling_constants_n, x0, gamma, alpha, dt=0.1
     '''
     nspins = len(x0)
     x0_flat = x0.flatten()
-    G = lambda t, state: driving_term_num(*coupling_constants_n, *state, gamma, alpha)
+    G = lambda t, state: driving_term_num(*coupling_constants_n, *state, alpha)
     times, states_flat = rkode(G, 0, x0_flat, dt, Ns)
     states = np.reshape(states_flat, (Ns, nspins, 3))
     final_state = np.reshape(states_flat[-1], (nspins, 3))
