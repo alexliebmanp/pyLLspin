@@ -12,6 +12,8 @@ from pyLLspin.mathematica_interface import *
 from pyLLspin.helper import *
 from pyLLspin.numerical import *
 from pyLLspin.diff_eq_solver import *
+import time
+import numba
 
 def find_ground_state_mathematica(H_sum, coupling_constants, coupling_constants_n, num_spins, num_neighbors, method='Minimize', x0=None, extra_args=['Method -> {"SimulatedAnnealing"}']):
     '''
@@ -172,8 +174,9 @@ def run_llg_sim(driving_term_num, coupling_constants_n, x0, alpha, dt=0.1, Ns=10
     '''
     nspins = len(x0)
     x0_flat = x0.flatten()
-    G = lambda t, state: driving_term_num(*coupling_constants_n, *state, alpha)
+    #@numba.njit
+    def G(t, state):
+        return driving_term_num(*coupling_constants_n, *state, alpha)
     times, states_flat = rkode(G, 0, x0_flat, dt, Ns)
     states = np.reshape(states_flat, (Ns, nspins, 3))
-    final_state = np.reshape(states_flat[-1], (nspins, 3))
     return times, states

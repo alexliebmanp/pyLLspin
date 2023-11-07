@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sp
-#import numba
+import numba
 
 
 # Runge-Kutta
 # solves df/dx = G(x, f(x))
 #@numba.jit(nopython=True)
+#@numba.njit
 def rkode(G, x0, f0, dx, Ns):
 
     f = np.zeros((Ns, f0.size))
