@@ -26,9 +26,9 @@ def get_analytical_ll_matrix_transv(H_single, num_spins, num_neighbors):
     '''
 
     # compute effective field in LLG formalism as derivative of H with respect to S in cartesian coordinates
-    B_effx = sp.diff(H_single, Sx(n))
-    B_effy = sp.diff(H_single, Sy(n))
-    B_effz = sp.diff(H_single, Sz(n))
+    B_effx = -sp.diff(H_single, Sx(n))
+    B_effy = -sp.diff(H_single, Sy(n))
+    B_effz = -sp.diff(H_single, Sz(n))
     B_eff = sp.Matrix([B_effx, B_effy, B_effz])
 
     # from effective field, compute the right hand side of LL equation of motion in cartesian coordinates
@@ -113,9 +113,9 @@ def get_analytical_ll_matrix(H_single, num_spins, num_neighbors):
     '''
 
     # compute effective field in LLG formalism as derivative of H with respect to S
-    B_effx = sp.diff(H_single, Sx(n))
-    B_effy = sp.diff(H_single, Sy(n))
-    B_effz = sp.diff(H_single, Sz(n))
+    B_effx = -sp.diff(H_single, Sx(n))
+    B_effy = -sp.diff(H_single, Sy(n))
+    B_effz = -sp.diff(H_single, Sz(n))
     B_eff = sp.Matrix([B_effx, B_effy, B_effz])
 
     # from effective field, compute the right hand side of LL equation of motion
@@ -174,9 +174,9 @@ def get_analytical_driving_term(H_single, num_spins, num_neighbors):
     '''
 
     # compute effective field in LLG formalism as derivative of H with respect to S
-    B_effx = sp.diff(H_single, Sx(n))
-    B_effy = sp.diff(H_single, Sy(n))
-    B_effz = sp.diff(H_single, Sz(n))
+    B_effx = -sp.diff(H_single, Sx(n))
+    B_effy = -sp.diff(H_single, Sy(n))
+    B_effz = -sp.diff(H_single, Sz(n))
     B_eff = sp.Matrix([B_effx, B_effy, B_effz])
 
     # from effective field, compute the right hand side of LLG equation of motion

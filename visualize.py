@@ -84,7 +84,7 @@ def plot_mode(mode, k_num, time, k_vect, energies, eigenvectors):
     plt.tight_layout()
     plt.show()
 
-def plot_state(state, lattice_const=0.11, length=0.1, factor=8, elev=7.5, azim=-90):
+def plot_state(state, lattice_const=0.11, length=0.1, factor=8, elev=7.5, azim=-90, fig=None, ax=None):
     '''
     for viewing magnetic states
 
@@ -92,8 +92,12 @@ def plot_state(state, lattice_const=0.11, length=0.1, factor=8, elev=7.5, azim=-
         - elev:
         -azim:
     '''
-    fig = plt.figure()
-    ax = plt.figure().add_subplot(projection='3d')
+    if ax is None:
+        fig = plt.figure()
+        ax = plt.figure().add_subplot(projection='3d')
+    else:
+        ax.remove()
+        ax = fig.add_subplot(ax.get_subplotspec(), projection='3d')
 
     ns = state.shape[0]
     state = length*state

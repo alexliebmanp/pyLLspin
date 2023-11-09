@@ -173,10 +173,11 @@ def run_llg_sim(driving_term_num, coupling_constants_n, x0, alpha, dt=0.1, Ns=10
         - states:   (Ns, nspins, 3) array representing state at each time step.
     '''
     nspins = len(x0)
-    x0_flat = x0.flatten()
-    #@numba.njit
+    x0_flat = tuple(x0.flatten())
+    coupling_constants_n = tuple(coupling_constants_n)
+    #@numba.jit
     def G(t, state):
         return driving_term_num(*coupling_constants_n, *state, alpha)
     times, states_flat = rkode(G, 0, x0_flat, dt, Ns)
-    states = np.reshape(states_flat, (Ns, nspins, 3))
+    states = np.reshape(list(states_flat), (Ns, nspins, 3))
     return times, states

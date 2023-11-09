@@ -6,11 +6,10 @@ import numba
 
 # Runge-Kutta
 # solves df/dx = G(x, f(x))
-#@numba.jit(nopython=True)
-#@numba.njit
+#@numba.jit
 def rkode(G, x0, f0, dx, Ns):
 
-    f = np.zeros((Ns, f0.size))
+    f = np.zeros((Ns, len(f0)))
     x = np.zeros(Ns)
     xn=x0
     fn=f0
