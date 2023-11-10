@@ -173,11 +173,34 @@ def run_llg_sim(driving_term_num, coupling_constants_n, x0, alpha, dt=0.1, Ns=10
         - states:   (Ns, nspins, 3) array representing state at each time step.
     '''
     nspins = len(x0)
-    x0_flat = tuple(x0.flatten())
-    coupling_constants_n = tuple(coupling_constants_n)
-    #@numba.jit
-    def G(t, state):
-        return driving_term_num(*coupling_constants_n, *state, alpha)
+    x0_flat = x0.flatten()
+    G = lambda t, state: driving_term_num(*coupling_constants_n, *state, alpha)
     times, states_flat = rkode(G, 0, x0_flat, dt, Ns)
+    states = np.reshape(list(states_flat), (Ns, nspins, 3))
+    return times, states
+
+@numba.jit(nopython=False)
+def run_llg_sim_numba(driving_term_numba, coupling_constants_n, x0, alpha, dt=0.1, Ns=10000):
+    '''
+    function of running an LLG simulation using numerical driving term function, ie numerically solve
+
+    dM/dt = -gamma*M\crossB_eff - alpha*M\cross(M\crossB_eff)
+
+    args:
+        - driving_term_num: function which evaluates RHS of LLG equation with inputs f(t, state, *args) where args = [*coupling_constants_n, alpha]
+        - coupling_constants_n: numerical coupling constants of free energy
+        - x0:  initial state in form [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
+        - gamma:   gyromagnetic ratio
+        - alpha:   phenomenological damping
+        - dt:      simulation time step
+        - Ns       number of time steps
+
+    returns:
+        - times: simulation time vector
+        - states:   (Ns, nspins, 3) array representing state at each time step.
+    '''
+    nspins = len(x0)
+    x0_flat = x0.flatten()
+    times, states_flat = rkode_llg_numba(driving_term_numba, 0, x0_flat, dt, Ns, coupling_constants_n, alpha)
     states = np.reshape(list(states_flat), (Ns, nspins, 3))
     return times, states

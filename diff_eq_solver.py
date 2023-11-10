@@ -34,6 +34,36 @@ def rkode(G, x0, f0, dx, Ns):
     return x, f
 
 
+# Runge-Kutta
+# solves df/dx = G(x, f) for specific LLG code driving force G(*coupling_constants, *f, alpha)
+@numba.jit(nopython=False)
+def rkode_llg_numba(G, x0, f0, dx, Ns, coupling_constants, alpha):
+
+    f = np.zeros((Ns, len(f0)))
+    x = np.zeros(Ns)
+    xn=x0
+    fn=f0
+    f[0,:] = f0
+    x[0] = x0
+    coupling_constants = tuple(coupling_constants)
+    for i in np.arange(1, Ns):
+
+        ### change for various modes here ###
+
+        #### 4th order RK ###
+        k1 = dx*G(*coupling_constants, *tuple(fn), alpha)
+        k2 = dx*G(*coupling_constants, *tuple(fn + k1/2), alpha)
+        k3 = dx*G(*coupling_constants, *tuple(fn + k2/2), alpha)
+        k4 = dx*G(*coupling_constants, *tuple(fn + k3), alpha)
+        fn = fn + (1/3)*(k1/2 + k2 + k3 + k4/2)
+        xn = xn + dx
+        f[i,:] = fn
+        x[i] = xn
+
+        #####################################
+
+    return x, f
+
 
 # solves df/dx = G(x, f(x)) - (does it really?) modify for everything
 #@numba.jit(nopython=True)
