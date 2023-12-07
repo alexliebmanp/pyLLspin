@@ -9,81 +9,98 @@ import mpl_toolkits.mplot3d.art3d as art3d
 from matplotlib.patches import Circle
 from pyLLspin.helper import *
 
-def get_mode(mode, k_num, time, k_vect, energies, eigenvectors):
+def get_mode_snapshot(k, t, freq, mode_vect, equilibrium_vect):
     '''
-    computes spin configuration for mode at k_num and time.
+    computes spin configuration for mode with frequency freq at wavevector k and time t.
 
     args:
-        - mode:     mode number 1-num_spins
-        - k_num:    k at which to evaluate the mode
-        - time:     time for which to evaluate the mode
-        - k_vect:   k vector over which energies and eigenvectors are evaluated
-        - energies: energy spectrum
-        - eigenvectors: ...
+        - k:        wavevector of mode
+        - t:        time at which to evaluate spin config
+        - freq:     frequency of mode
+        - mode_vect:    eigenvector of mode
+        - equilibrium_vect:  equilibrium position
+    return:
+        - spinconfig:   spin configuration at specified time
     '''
 
-    idx = find_nearest(k_vect, k_num)
-    omega_num = energies[mode][idx]
-    num_modes = len(energies)
-    vect_full = eigenvectors[mode][idx]
-    n_num = int(len(vect_full)/3)
-    vectx = []
-    vecty = []
-    vectz = []
-    for ii, val in enumerate(vect_full):
-        if ii%3==0:
-            vectx.append(val)
-        if ii%3==1:
-            vecty.append(val)
-        else:
-            vectz.append(val)
-    Sx_vect = np.real([vectx[i]*np.exp(-1j*omega_num*time) for i in range(n_num)])
-    Sy_vect = np.real([vecty[i]*np.exp(-1j*omega_num*time) for i in range(n_num)])
-    Sz_vect = np.real([vectz[i]*np.exp(-1j*omega_num*time) for i in range(n_num)])
-    Mag = [np.sum(Sx_vect), np.sum(Sy_vect), np.sum(Sz_vect)]
-    return Sx_vect, Sy_vect, Sz_vect, Mag
+    n_num = int(len(equilibrium_vect))
+    spinconfig = np.zeros((n_num, 3))
+    for n in range(n_num):
+        mode = np.real(mode_vect[n]*np.exp(-1j*freq*t))
+        equilib = equilibrium_vect[n]
+        spinconfig[n,:] = equilib + mode
+    return spinconfig
 
-def get_M_vs_t(mode, k_num, t_vect, k_vect, energies, eigenvectors):
-    '''
-    convenience function to evaluting M vs t. can be extended to output an function of Sx, Sy, Sz as a function of time (such as birefringence..)
-    '''
-
-    mx = np.zeros(len(t_vect))
-    my = np.zeros(len(t_vect))
-    mz = np.zeros(len(t_vect))
-    for ii, t in enumerate(t_vect):
-        Sx_vect, Sy_vect, Sz_vect, mag = get_mode(mode, k_num, t, k_vect, energies, eigenvectors)
-        mx[ii] = mag[0]
-        my[ii] = mag[1]
-        mz[ii] = mag[2]
-
-    return mx, my, mz
-
-def plot_mode(mode, k_num, time, k_vect, energies, eigenvectors):
+def plot_mode(k, freq, mode_vect, equilibrium_vect, period_fraction=0.25, lattice_const=0.11, length=0.1, factor=8, elev=7.5, azim=-90, fig=None, ax=None):
     '''
     plots spin configuration for mode at k_num and time.
 
     args:
-        - mode:     mode number 1-num_spins
-        - k_num:    k at which to evaluate the mode
-        - time:     time for which to evaluate the mode
-        - k_vect:   k vector over which energies and eigenvectors are evaluated
-        - energies: energy spectrum
-        - eigenvectors: ...
+        - k:        wavevector of mode
+        - freq:     frequency of mode
+        - mode_vect:    eigenvector of mode
+        - equilibrium_vect:  equilibrium position
+        - period_faction:        fraction of period over which to display modes
+        - elev:
+        -azim:
     '''
 
-    Sx_vect, Sy_vect, Sz_vect, Mag = get_mode(mode, k_num, time, k_vect, energies, eigenvectors)
-    fig, [ax1, ax2, ax3] = plt.subplots(1,3)
-    num_atoms = int(len(eigenvectors[0][0])/2)
-    p = [i for i in range(num_atoms)]
-    ax1.quiver(p, np.ones(len(p)), Sx_vect, Sy_vect, color='red')
-    ax2.quiver(p, np.ones(len(p)), Sx_vect, Sy_vect, color='blue')
-    ax1.set_ylim(0.75,1.25)
-    ax2.set_ylim(0.75,1.25)
-    fig.suptitle(f'mode {mode}')
-    plt.tight_layout()
-    plt.show()
+    if ax is None:
+        fig = plt.figure()
+        ax = plt.figure().add_subplot(projection='3d')
+        showplot=True
+    else:
+        ax.remove()
+        ax = fig.add_subplot(ax.get_subplotspec(), projection='3d')
+        showplot=False
 
+    ns = mode_vect.shape[0]
+    mode_vect = length*mode_vect
+    equilibrium_vect = length*equilibrium_vect
+    xx, yy, zz = np.meshgrid(np.arange(0, 1, 1), np.arange(0, 1, 1), np.arange(0, ns*lattice_const, lattice_const))
+    vv_eq = equilibrium_vect[:,1]
+    ww_eq = equilibrium_vect[:,2]
+    uu_eq = equilibrium_vect[:,0]
+
+    lattice_positions = [np.array([0,0,i*lattice_const]) for i in range(ns)]
+    period = 2*np.pi/freq
+    ts = np.linspace(0,period_fraction*period,100)
+    fluctuations = np.zeros((len(ts), ns, 3))
+    for ii, t in enumerate(ts):
+        spinconfig= get_mode_snapshot(k, t, freq, mode_vect, equilibrium_vect)
+        for n in range(ns):
+            fluctuations[ii, n] = lattice_positions[n] + spinconfig[n]
+    ax.scatter(fluctuations[:,:,0].flatten(), fluctuations[:,:,1].flatten(), fluctuations[:,:,2].flatten(), 'o', s=1, color='blue')
+
+    ax.set_box_aspect((1/factor,1/factor,1))
+    ax.quiver(xx, yy, zz, uu_eq, vv_eq, ww_eq, normalize=False, linewidths=3, color='red')
+    ax.axis('off')
+    ax.plot([0,0],[0,0],[0,lattice_const*ns], '--', color='black')
+
+    if elev!=90:
+        for i in range(ns):
+            circle = Circle((0, 0), length, facecolor=(0, 0, 1, 0.25))
+            ax.add_patch(circle)
+            art3d.pathpatch_2d_to_3d(circle, z=i*lattice_const, zdir="z")
+    if elev==90:
+        annotation_locs = []
+        for ii, s in enumerate(equilibrium_vect):
+            sx, sy, sz = s
+            s_dir = np.array([sx, sy])/np.sqrt(sx**2 + sy**2)
+            fract=0.023
+            tol = 1e-2
+            if (sx, sy) in annotation_locs:
+                sx = sx + fract*s_dir[0]
+                sy = sy + fract*s_dir[1]
+                annotation_locs.append((sx, sy))
+            else:
+                annotation_locs.append((sx, sy))
+            ax.annotate(ii+1, (sx/3, sy/3))
+
+    ax.view_init(elev, azim)
+    if showplot:
+        plt.show()
+    
 def plot_state(state, lattice_const=0.11, length=0.1, factor=8, elev=7.5, azim=-90, fig=None, ax=None):
     '''
     for viewing magnetic states
@@ -95,9 +112,11 @@ def plot_state(state, lattice_const=0.11, length=0.1, factor=8, elev=7.5, azim=-
     if ax is None:
         fig = plt.figure()
         ax = plt.figure().add_subplot(projection='3d')
+        showplot=True
     else:
         ax.remove()
         ax = fig.add_subplot(ax.get_subplotspec(), projection='3d')
+        showplot=False
 
     ns = state.shape[0]
     state = length*state
@@ -117,12 +136,85 @@ def plot_state(state, lattice_const=0.11, length=0.1, factor=8, elev=7.5, azim=-
             ax.add_patch(circle)
             art3d.pathpatch_2d_to_3d(circle, z=i*lattice_const, zdir="z")
     if elev==90:
+        annotation_locs = []
         for ii, s in enumerate(state):
             sx, sy, sz = s
+            s_dir = np.array([sx, sy])/np.sqrt(sx**2 + sy**2)
+            fract=0.023
+            tol = 1e-2
+            if (sx, sy) in annotation_locs:
+                sx = sx + fract*s_dir[0]
+                sy = sy + fract*s_dir[1]
+                annotation_locs.append((sx, sy))
+            else:
+                annotation_locs.append((sx, sy))
             ax.annotate(ii+1, (sx/3, sy/3))
 
     ax.view_init(elev, azim)
-    plt.show()
+    if showplot:
+        plt.show()
+
+def plot_state_3D(state, lattice_vects=[np.array([1,0,0]), np.array([0,1,0]), np.array([0,0,1])], lattice_const=0.11, length=0.1, factor=1, elev=7.5, azim=-90, fig=None, ax=None):
+    '''
+    for viewing magnetic states
+
+    args:
+        - lattice_vects:    list of vectors to use to associate lattice coordinat with spatial coordinate
+        - elev:
+        -azim:
+    '''
+    if ax is None:
+        fig = plt.figure()
+        ax = plt.figure().add_subplot(projection='3d')
+        showplot=True
+    else:
+        ax.remove()
+        ax = fig.add_subplot(ax.get_subplotspec(), projection='3d')
+        showplot=False
+
+    nx, ny, nz = state.shape[:-1]
+    state = length*state
+    xx = np.zeros((nx,ny,nz))
+    yy = np.zeros((nx,ny,nz))
+    zz = np.zeros((nx,ny,nz))
+    for i in range(nx):
+        for j in range(ny):
+            for k in range(nz):
+                pos = lattice_vects[0]*i + lattice_vects[1]*j + lattice_vects[2]*k
+                xx[i,j,k] = pos[0]
+                yy[i,j,k] = pos[1]
+                zz[i,j,k] = pos[2]
+    uu = state[:,:,:,0]
+    vv = state[:,:,:,1]
+    ww = state[:,:,:,2]
+
+    ax.set_box_aspect((1/factor,1/factor,1))
+    ax.quiver(xx, yy, zz, uu, vv, ww, normalize=False, linewidths=3, color='red')
+    #ax.axis('off')
+    '''
+    for i in range(nx):
+        for j in range(ny):
+            for k in range(nz):
+                pos = lattice_vects[0]*i + lattice_vects[1]*j + lattice_vects[2]*k
+
+                ax.plot([0,0],[0,0],[0,lattice_const*nz], '--', color='black')
+    '''
+
+    '''
+    if elev!=90:
+        for i in range(ns):
+            circle = Circle((0, 0), length, facecolor=(0, 0, 1, 0.25))
+            ax.add_patch(circle)
+            art3d.pathpatch_2d_to_3d(circle, z=i*lattice_const, zdir="z")
+    if elev==90:
+        for ii, s in enumerate(state):
+            sx, sy, sz = s
+            ax.annotate(ii+1, (sx/3, sy/3))
+    '''
+
+    ax.view_init(elev, azim)
+    if showplot:
+        plt.show()
 
 def check_fluctuations_transverse(groundstate, eigenvects, vmin=-10e-8, vmax=10e-8):
     '''

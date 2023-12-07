@@ -53,7 +53,7 @@ def get_dispersion(k_vect, Mk):
         - vects:    eigenvectors of M(k)
     '''
 
-    n_num = Mk(1).shape[0]
+    n_num = Mk(0).shape[0]
     energies = 1j*np.zeros((n_num,len(k_vect)))
     eigenvectors = 1j*np.zeros((n_num, len(k_vect), n_num))
     #energies = []
@@ -73,3 +73,23 @@ def get_dispersion(k_vect, Mk):
         #for ii in range(n_num):
         #    eigenvectors[ii,i,:] = vects[:,ii]
     return energies, eigenvectors
+
+def transv_flucs_to_local_coords(mode):
+    '''
+    Given a transverse fluctuation mode, return full vector in local coordinate (ie, add in a local z coordinate equal to 1)
+    '''
+
+    num_spins = int(len(mode)/2)
+    fullmode = 1j*np.zeros(3*num_spins)
+    for ii in range(num_spins):
+        fullmode[3*ii] = mode[2*ii]
+        fullmode[3*ii+1] = mode[2*ii+1]
+    return fullmode
+
+
+def get_mode_cartesian(mode, transf):
+    '''
+    Given a mode which only gives the transverse fluctuations and a transformation from local coordinates to cartesian, returns cartesian mode in regular state representation, [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
+    '''
+    fullmode = transv_flucs_to_local_coords(mode)
+    return np.matmul(transf, fullmode).reshape((int(len(fullmode)/3),3))
