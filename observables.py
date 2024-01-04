@@ -113,6 +113,17 @@ def get_scattering_cross_section(qs, state, i=0, j=0, uc_length=2, numcells=10):
         cross_section[ii] = np.conjugate(get_Sq(q, state, uc_length, numcells)[i])*get_Sq(q, state, uc_length, numcells)[j]
     return cross_section
 
+def is_mode_uniform(mode, round_sig=5):
+    '''
+    returns True if the all vectors in the mode are the same
+    '''
+
+    unique = len(np.unique(np.round(mode,round_sig),axis=0))
+    if unique==1:
+        return True
+    else:
+        return False
+
 def get_tot_scattering_cross_section_xy(qs, state, uc_length=2, numcells=10):
     '''
     return sigma_xx + sigma_yy

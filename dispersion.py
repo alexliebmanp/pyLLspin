@@ -76,7 +76,7 @@ def get_dispersion(k_vect, Mk):
 
 def transv_flucs_to_local_coords(mode):
     '''
-    Given a transverse fluctuation mode, return full vector in local coordinate (ie, add in a local z coordinate equal to 1)
+    Given a transverse fluctuation mode, return full vector in local coordinate (ie, add in a local z coordinate equal to 0)
     '''
 
     num_spins = int(len(mode)/2)
@@ -85,7 +85,6 @@ def transv_flucs_to_local_coords(mode):
         fullmode[3*ii] = mode[2*ii]
         fullmode[3*ii+1] = mode[2*ii+1]
     return fullmode
-
 
 def get_mode_cartesian(mode, transf):
     '''
