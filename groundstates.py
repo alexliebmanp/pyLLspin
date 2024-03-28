@@ -96,7 +96,7 @@ def find_ground_state_mathematica(H_sum, coupling_constants, coupling_constants_
 
     return groundstate
 
-def find_ground_state_python(H_num, coupling_constants, coupling_constants_n, num_spins, num_neighbors, x0=None, method=None):
+def find_ground_state_python(H_num, coupling_constants_n, num_spins, x0=None, method=None):
     '''
     Given a spin chain Hamiltonian in the form H = sum(H_sum) where the sum is on spins, and a list of coupling contants and their values, and the number of spins, computes the ground state spin configuration. Periodic boundary conditions are applied at the boundaries of spin chain.
 
@@ -120,16 +120,29 @@ def find_ground_state_python(H_num, coupling_constants, coupling_constants_n, nu
         x0 = spin_state_to_angles(x0)
 
     # get numerical Hamiltonian as function of angles
+    #H_angles = lambda angles: H_num(*coupling_constants_n, *angles_to_spin_state(redefine_angles(normal_rotate_state(angles))).flatten())
     H_angles = lambda angles: H_num(*coupling_constants_n, *angles_to_spin_state(angles).flatten())
     #print(H_angles(x0))
 
     # minimize H_angles
-    res = opt.minimize(H_angles, x0, method=method)
+    if method==None or method=='none':
+        res = opt.minimize(H_angles, x0, method=method)
+    elif method=='basinhopping':
+        res = opt.basinhopping(H_angles, x0)
+    elif method=='differential_evolution':
+        bounds = np.array([(0,2*np.pi) for i in range(2*num_spins)])
+        res = opt.differential_evolution(H_angles, bounds, x0=x0)
+    elif method=='shgo':
+        bounds = np.array([(0,2*np.pi) for i in range(2*num_spins)])
+        res = opt.shgo(H_angles, bounds)
+    elif method=='dual_annealing':
+        bounds = np.array([(0,2*np.pi) for i in range(2*num_spins)])
+        res = opt.dual_annealing(H_angles, bounds, x0=x0)
 
-    angles = [i for i in res.x]
-    angles = normal_rotate_state(angles)
-    angles = redefine_angles(angles)
-    groundstate = angles_to_spin_state(angles)
+    angles_opt = [i for i in res.x]
+    #angles_opt = normal_rotate_state(angles_opt)
+    #angles_opt = redefine_angles(angles_opt)
+    groundstate = angles_to_spin_state(angles_opt)
 
     return groundstate
 

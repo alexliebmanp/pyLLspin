@@ -145,7 +145,7 @@ def plot_mode(k, freq, mode_vect, equilibrium_vect, period_fraction=0.5, lattice
     if showplot:
         plt.show()
     
-def plot_state(state, lattice_const=1, length=1, aspect_factor=4, elev=7.5, azim=-90, fig=None, ax=None): 
+def plot_state(state, lattice_const=1, length=1, aspect_factor=4, elev=7.5, azim=-90, fig=None, ax=None, colors=None): 
     '''
     for viewing magnetic states
 
@@ -171,8 +171,12 @@ def plot_state(state, lattice_const=1, length=1, aspect_factor=4, elev=7.5, azim
         xs = np.array([0, s[0]*fact])
         ys = np.array([0, s[1]*fact])
         zs = np.array([z_positions[ii], z_positions[ii]+s[2]])
+        if colors is not None:
+            col = colors[ii]
+        else:
+            col = 'r'
         arrow = Arrow3D(xs, ys, zs, 
-                lw=2, mutation_scale=5, arrowstyle="-|>", color="r")
+                lw=2, mutation_scale=5, arrowstyle="-|>", color=col)
         ax.add_artist(arrow)
 
     ax.set_box_aspect((1/aspect_factor,1/aspect_factor,1))
