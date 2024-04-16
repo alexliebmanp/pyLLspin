@@ -125,7 +125,7 @@ def find_ground_state_python(H_num, coupling_constants_n, num_spins, x0=None, me
     #print(H_angles(x0))
 
     # minimize H_angles
-    if method==None or method=='none':
+    if method not in ['basinhopping', 'differential_evolution', 'shgo', 'dual_annealing']:
         res = opt.minimize(H_angles, x0, method=method)
     elif method=='basinhopping':
         res = opt.basinhopping(H_angles, x0)
@@ -191,6 +191,27 @@ def run_llg_sim(driving_term_num, coupling_constants_n, x0, alpha, dt=0.1, Ns=10
     times, states_flat = rkode(G, 0, x0_flat, dt, Ns)
     states = np.reshape(list(states_flat), (Ns, nspins, 3))
     return times, states
+
+@numba.jit(nopython=False)
+def find_ground_state_llg_numba(driving_term_num, coupling_constants_n, x0, alpha, dt=0.1, Ns=10000):
+    '''
+    wrapper function for just finding the ground state via run_llg_simulation.
+
+    args:
+        - driving_term_num: function which evaluates RHS of LLG equation with inputs f(*coupling_constants_n, *state, alpha, gamma)
+        - coupling_constants_n: numerical coupling constants of free energy
+        - x0:  initial state in form [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
+        - gamma:   gyromagnetic ratio
+        - alpha:   phenomenological damping
+        - dt:      simulation time step
+        - Ns       number of time steps
+
+    returns:
+        - final_state: final state in simulation of form [[Sx1, Sy1, Sz1],...,[Sxn, Syn, Szn]]
+    '''
+    times, states = run_llg_sim_numba(driving_term_num, coupling_constants_n, x0, alpha, dt, Ns)
+    final_state = states[-1]
+    return final_state
 
 @numba.jit(nopython=False)
 def run_llg_sim_numba(driving_term_numba, coupling_constants_n, x0, alpha, dt=0.1, Ns=10000):
