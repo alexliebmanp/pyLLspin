@@ -62,7 +62,7 @@ def create_spin_model(H_single, H_sum, num_spins, coupling_constants, coupling_c
     
     return spin_model
 
-def load_spin_model(name, H_single=None, H_sum=None, num_spins=None, coupling_constants=None, num_neighbors=None, import_path='/Users/oxide/Documents/research/orenstein/code/spin_simulation/helical_spins/pickels/'):
+def load_spin_model(name, H_single=None, H_sum=None, num_spins=None, coupling_constants=None, num_neighbors=None, import_path='/Users/oxide/Documents/research/orenstein/code/spin_simulation/GSM_lib/'):
     '''
     load spin model
     '''
@@ -104,7 +104,7 @@ def load_spin_model(name, H_single=None, H_sum=None, num_spins=None, coupling_co
         with open(path+f'coupling_constants_{ham}.pickle','rb') as f:
             coupling_constants = pickle.load(f)
     H_num_numba = numba.jit(H_num, nopython=False)
-    coupling_constants_num = np.ones(len(coupling_constants))
+    coupling_constants_num = np.zeros(len(coupling_constants))
     spin_model = {'num_spins':num_spins,
             'num_neighbors':num_neighbors,
             'coupling_constants':coupling_constants,
@@ -161,7 +161,7 @@ class SpinModel:
 
         self.experiments = {}
 
-    def compute_ground_states(self, experiment, fields, field_direction, x0, method=None, tqdm_disable=True):
+    def compute_ground_states(self, experiment, fields, field_direction, x0, method=None, tqdm_disable=True, min_kwargs={}):
     
         field_direction = field_direction/np.sqrt(np.sum(field_direction**2))
         groundstates = []
@@ -172,12 +172,12 @@ class SpinModel:
             self.coupling_constants[sp.symbols('h_y')] = hy
             self.coupling_constants[sp.symbols('h_z')] = hz
             coupling_constants = list(self.coupling_constants.values())
-            state = find_ground_state_python(self.H_num, coupling_constants, self.num_spins, x0, method=method)
+            state = find_ground_state_python(self.H_num, coupling_constants, self.num_spins, x0, method=method, min_kwargs=min_kwargs)
             energies.append(self.get_energy(state, np.array([hx, hy, hz])))
             x0 = state
             groundstates.append(state)
 
-        self.experiments[experiment] = {'fields':fields, 'field_direction':field_direction, 'energies_imported':energies , 'groundstates':groundstates}
+        self.experiments[experiment] = {'fields':fields, 'field_direction':field_direction, 'energies_imported':np.array(energies), 'groundstates':groundstates}
         self.compute_ground_state_properties(experiment)
 
     def compute_ground_states_llg(self, experiment, fields, field_direction, x0, alpha=0.01, dt=0.2, Ns=5000, tqdm_disable=True):
@@ -272,11 +272,11 @@ class SpinModel:
 
         self.experiments[experiment]['magnetization'] = magnetization
         self.experiments[experiment]['mag_fielddir'] = mag_fielddir
-        self.experiments[experiment]['energies'] = energies
+        self.experiments[experiment]['energies'] = np.array(energies)
         self.experiments[experiment]['birefringence'] = birefringence
         self.experiments[experiment]['birefringence angle'] = angle
-        self.experiments[experiment]['q1'] = q1amps
-        self.experiments[experiment]['q2'] = q2amps
+        self.experiments[experiment]['q1'] = np.array(q1amps)
+        self.experiments[experiment]['q2'] = np.array(q2amps)
     
     def plot_groundstate_properties(self, experiment):
 
@@ -305,7 +305,7 @@ class SpinModel:
         fig.tight_layout()
         plt.show()
 
-    def plot_groundstate(self, experiment, field, elev=90, azim=90, tol=0.01):
+    def plot_groundstate(self, experiment, field, elev=90, azim=-90, tol=0.01):
 
         hs = self.experiments[experiment]['fields']
         groundstates = self.experiments[experiment]['groundstates']
@@ -499,6 +499,7 @@ class SpinModel:
 
     def import_experiments(self, directory):
 
+        ''' # old way of extracting constants
         with open(f'{directory}/model_info.dat', 'r') as f:
             self.name = f.readline().rsplit('name: ', 1)[-1][:-1]
             self.num_spins = int(f.readline().rsplit('num_spins: ', 1)[-1])
@@ -508,6 +509,22 @@ class SpinModel:
                 line = f.readline()
                 val = float(line.rsplit(f'{const}: ', 1)[-1])
                 self.coupling_constants[const] = val
+        '''
+
+        # this way can better handle changing model definitions
+        with open(f'{directory}/model_info.dat', 'r') as f:
+            self.name = f.readline().rsplit('name: ', 1)[-1][:-1]
+            self.num_spins = int(f.readline().rsplit('num_spins: ', 1)[-1])
+            self.num_neighbors = int(f.readline().rsplit('num_neighbors: ', 1)[-1])
+            f.readline()
+            lines = [line.rstrip() for line in f]
+            for const in list(self.coupling_constants.keys()):
+                for line in lines:
+                    try:
+                        val = float(line.rsplit(f'{const}: ', 1)[-1])
+                        self.coupling_constants[const] = val
+                    except:
+                        pass
 
         experiments = [d for d in os.listdir(directory) if os.path.isdir(os.path.join(directory, d))]
         self.experiments = {}

@@ -229,6 +229,95 @@ def plot_state(state, lattice_const=1, length=1, aspect_factor=4, elev=7.5, azim
     if showplot:
         plt.show()
 
+def plot_states(states, lattice_const=1, length=1, aspect_factor=4, elev=7.5, azim=-90, fig=None, ax=None, colors=None, facecolor=(0, 0, 1, 0.25)): 
+    '''
+    for viewing magnetic states
+
+    args:
+        - elev:
+        -azim:
+    '''
+    if ax is None:
+        fig = plt.figure()
+        ax = plt.figure().add_subplot(projection='3d')
+        showplot=True
+    else:
+        ax.remove()
+        ax = fig.add_subplot(ax.get_subplotspec(), projection='3d')
+        showplot=False
+
+    states = np.array(states)
+    colors = np.array(colors)
+    ns = states[0].shape[0]
+    states = length*states
+
+    z_positions = np.arange(0, ns*lattice_const, lattice_const)
+    for jj, state in enumerate(states):
+        for ii, s in enumerate(state):
+            fact=1.1
+            xs = np.array([0, s[0]*fact])
+            ys = np.array([0, s[1]*fact])
+            zs = np.array([z_positions[ii], z_positions[ii]+s[2]])
+            if (colors!=np.array(None)).any():
+                col = colors[jj,ii]
+            else:
+                col = 'r'
+            arrow = Arrow3D(xs, ys, zs, 
+                    lw=2, mutation_scale=5, arrowstyle="-|>", color=col)
+            ax.add_artist(arrow)
+
+    ax.set_box_aspect((1/aspect_factor,1/aspect_factor,1))
+    ax.axis('off')
+    ax.plot([0,0],[0,0],[0,lattice_const*ns], '--', color='black')
+
+    lat_range=1
+    xmin = -(lat_range)*lattice_const
+    xmax = (lat_range)*lattice_const
+    ymin = -(lat_range)*lattice_const
+    ymax = (lat_range)*lattice_const
+    zmin = np.min(z_positions.flatten())-lattice_const
+    zmax = np.max(z_positions.flatten())+lattice_const
+    ax.set_xlim([xmin, xmax])
+    ax.set_ylim([ymin, ymax])
+    ax.set_zlim([zmin, zmax])
+
+    if elev!=90:
+        for i in range(ns):
+            circle = Circle((0, 0), length, facecolor=facecolor)
+            ax.add_patch(circle)
+            art3d.pathpatch_2d_to_3d(circle, z=i*lattice_const, zdir="z")
+    '''
+    if elev==90:
+        fract = 0.1
+        fract2 = 0.2
+        tol = 0.1
+        bias = np.array([-1, -1])*0.1
+        annotation_locs = []
+        for ii, s in enumerate(state[:]):
+            sx, sy, sz = s
+            s_dir = np.array([sx, sy])/np.sqrt(sx**2 + sy**2)
+            sx = sx + fract*s_dir[0] + bias[0]
+            sy = sy + fract*s_dir[1] + bias[1]
+            if ii==0:
+                annotation_locs.append([sx, sy, 0])
+            else:
+                count=0
+                for jj in range(len(annotation_locs)):
+                    ss = annotation_locs[jj]
+                    if np.abs(sx-ss[0]) <= tol and np.abs(sy-ss[1])<= tol:
+                        count+=1
+                        ss[2]+=1
+                        sx = sx + ss[2]*fract2*s_dir[0]
+                        sy = sy + ss[2]*fract2*s_dir[1]
+                    if count==0:
+                        annotation_locs.append([sx, sy, 0])
+            ax.text(sx, sy, ns*lattice_const, str(ii+1))
+        '''
+
+    ax.view_init(elev, azim)
+    if showplot:
+        plt.show()
+
 def plot_state_3D(state, lattice_vects=[np.array([1,0,0]), np.array([0,1,0]), np.array([0,0,1])], lattice_const=0.11, length=0.1, factor=1, elev=7.5, azim=-90, fig=None, ax=None):
     '''
     for viewing magnetic states

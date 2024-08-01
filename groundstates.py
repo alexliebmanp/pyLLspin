@@ -96,7 +96,7 @@ def find_ground_state_mathematica(H_sum, coupling_constants, coupling_constants_
 
     return groundstate
 
-def find_ground_state_python(H_num, coupling_constants_n, num_spins, x0=None, method=None):
+def find_ground_state_python(H_num, coupling_constants_n, num_spins, x0=None, method=None, min_kwargs={}):
     '''
     Given a spin chain Hamiltonian in the form H = sum(H_sum) where the sum is on spins, and a list of coupling contants and their values, and the number of spins, computes the ground state spin configuration. Periodic boundary conditions are applied at the boundaries of spin chain.
 
@@ -125,19 +125,17 @@ def find_ground_state_python(H_num, coupling_constants_n, num_spins, x0=None, me
     #print(H_angles(x0))
 
     # minimize H_angles
+    bounds = np.array([(0,2*np.pi) for i in range(2*num_spins)])
     if method not in ['basinhopping', 'differential_evolution', 'shgo', 'dual_annealing']:
-        res = opt.minimize(H_angles, x0, method=method)
+        res = opt.minimize(H_angles, x0, bounds=bounds, **min_kwargs)
     elif method=='basinhopping':
-        res = opt.basinhopping(H_angles, x0)
+        res = opt.basinhopping(H_angles, x0, minimizer_kwargs={'bounds':bounds}, **min_kwargs)
     elif method=='differential_evolution':
-        bounds = np.array([(0,2*np.pi) for i in range(2*num_spins)])
-        res = opt.differential_evolution(H_angles, bounds, x0=x0)
+        res = opt.differential_evolution(H_angles, bounds=bounds, x0=x0, **min_kwargs)
     elif method=='shgo':
-        bounds = np.array([(0,2*np.pi) for i in range(2*num_spins)])
-        res = opt.shgo(H_angles, bounds)
+        res = opt.shgo(H_angles, bounds, **min_kwargs)
     elif method=='dual_annealing':
-        bounds = np.array([(0,2*np.pi) for i in range(2*num_spins)])
-        res = opt.dual_annealing(H_angles, bounds, x0=x0)
+        res = opt.dual_annealing(H_angles, bounds=bounds, x0=x0, **min_kwargs)
 
     angles_opt = [i for i in res.x]
     #angles_opt = normal_rotate_state(angles_opt)
